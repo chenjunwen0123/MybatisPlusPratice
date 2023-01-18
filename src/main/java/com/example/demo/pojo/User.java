@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 @Data
 public class User {
+    @TableLogic
+    private Integer deleted;
     @TableId(type= IdType.ASSIGN_ID)
     private Long id;
     private String name;

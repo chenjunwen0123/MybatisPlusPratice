@@ -1,12 +1,13 @@
 package com.example.demo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.mapper.UserMapper;
 import com.example.demo.pojo.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @SpringBootTest
 class DemoApplicationTests {
@@ -90,8 +91,63 @@ class DemoApplicationTests {
         user2.setAge(222);
 
         // 插队现场
-        userMapper.updateById(user2);
-        userMapper.updateById(user1);
+        userMapper.updateById(user2);    // version 1 -> version 2
+        userMapper.updateById(user1);    // version 1 != version 2  ---> failed
+    }
+    @Test
+    public void testSelectBatchIds(){
+        List<User> users = userMapper.selectBatchIds(Arrays.asList(1,2,3,4,5));
+        users.forEach(System.out::println);
     }
 
+    @Test
+    public void testSelectByMap(){
+        Map<String,Object> map = new HashMap<>();
+        map.put("age", 9);
+        List<User> users = userMapper.selectByMap(map);
+        users.forEach(System.out::println);
+    }
+    @Test
+    public void testQueryWrapper(){
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.gt("age",10);
+        List<User> userArrayList= new ArrayList<>();
+        userArrayList = userMapper.selectList(qw);
+        userArrayList.forEach(System.out::println);
+    }
+
+    @Test
+    public void testPaginationInterceptor(){
+        Page<User> page = new Page<>(2,4);
+        userMapper.selectPage(page,null);
+        page.getRecords().forEach(System.out::println);
+
+        //page的其他方法
+        System.out.println("当前页：" + page.getCurrent());
+        System.out.println("总页数：" + page.getPages());
+        System.out.println("记录数：" + page.getTotal());
+        System.out.println("是否有上一页：" + page.hasPrevious());
+        System.out.println("是否有下一页：" + page.hasNext());
+    }
+
+    @Test
+    public void testDeletById(){
+        System.out.println("-------- logic deleted --------");
+        userMapper.deleteById(3L);
+
+        System.out.println("-------- logic search ---------");
+        userMapper.selectById(3L);
+    }
+    @Test
+    public void testWrapperLike(){
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.likeRight("name","test").likeLeft("name","1");
+        userMapper.selectList(qw).forEach(System.out::println);
+    }
+    @Test
+    public void testWrapperInSql(){
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.inSql("age","select age from user where age > 10");
+        userMapper.selectList(wrapper).forEach(System.out::println);
+    }
 }
